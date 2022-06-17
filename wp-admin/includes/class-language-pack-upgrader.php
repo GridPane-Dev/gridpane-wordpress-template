@@ -110,7 +110,7 @@ class Language_Pack_Upgrader extends WP_Upgrader {
 	 * @since 3.7.0
 	 */
 	public function upgrade_strings() {
-		$this->strings['starting_upgrade'] = __( 'Some of your translations need updating. Sit tight for a few more seconds while we update them as well.' );
+		$this->strings['starting_upgrade'] = __( 'Some of your translations need updating. Sit tight for a few more seconds while they are updated as well.' );
 		$this->strings['up_to_date']       = __( 'Your translations are all up to date.' );
 		$this->strings['no_package']       = __( 'Update package not available.' );
 		/* translators: %s: Package URL. */
@@ -309,17 +309,18 @@ class Language_Pack_Upgrader extends WP_Upgrader {
 	}
 
 	/**
-	 * Check the package source to make sure there are .mo and .po files.
+	 * Checks that the package source contains .mo and .po files.
 	 *
 	 * Hooked to the {@see 'upgrader_source_selection'} filter by
 	 * Language_Pack_Upgrader::bulk_upgrade().
 	 *
 	 * @since 3.7.0
 	 *
-	 * @global WP_Filesystem_Base $wp_filesystem Subclass
+	 * @global WP_Filesystem_Base $wp_filesystem WordPress filesystem subclass.
 	 *
-	 * @param string|WP_Error $source
-	 * @param string          $remote_source
+	 * @param string|WP_Error $source        The path to the downloaded package source.
+	 * @param string          $remote_source Remote file source location.
+	 * @return string|WP_Error The source as passed, or a WP_Error object on failure.
 	 */
 	public function check_package( $source, $remote_source ) {
 		global $wp_filesystem;

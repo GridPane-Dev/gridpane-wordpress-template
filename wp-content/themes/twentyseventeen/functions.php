@@ -45,6 +45,11 @@ function twentyseventeen_setup() {
 	add_theme_support( 'title-tag' );
 
 	/*
+	 * Enables custom line height for blocks
+	 */
+	add_theme_support( 'custom-line-height' );
+
+	/*
 	 * Enable support for Post Thumbnails on posts and pages.
 	 *
 	 * @link https://developer.wordpress.org/themes/functionality/featured-images-post-thumbnails/
@@ -79,6 +84,7 @@ function twentyseventeen_setup() {
 			'caption',
 			'script',
 			'style',
+			'navigation-widgets',
 		)
 	);
 
@@ -267,7 +273,7 @@ function twentyseventeen_content_width() {
 	}
 
 	/**
-	 * Filter Twenty Seventeen content width of the theme.
+	 * Filters Twenty Seventeen content width of the theme.
 	 *
 	 * @since Twenty Seventeen 1.0
 	 *
@@ -388,7 +394,7 @@ function twentyseventeen_excerpt_more( $link ) {
 	$link = sprintf(
 		'<p class="link-more"><a href="%1$s" class="more-link">%2$s</a></p>',
 		esc_url( get_permalink( get_the_ID() ) ),
-		/* translators: %s: Post title. */
+		/* translators: %s: Post title. Only visible to screen readers. */
 		sprintf( __( 'Continue reading<span class="screen-reader-text"> "%s"</span>', 'twentyseventeen' ), get_the_title( get_the_ID() ) )
 	);
 	return ' &hellip; ' . $link;
@@ -448,10 +454,10 @@ function twentyseventeen_scripts() {
 	wp_enqueue_style( 'twentyseventeen-fonts', twentyseventeen_fonts_url(), array(), null );
 
 	// Theme stylesheet.
-	wp_enqueue_style( 'twentyseventeen-style', get_stylesheet_uri(), array(), '20190507' );
+	wp_enqueue_style( 'twentyseventeen-style', get_stylesheet_uri(), array(), '20201208' );
 
 	// Theme block stylesheet.
-	wp_enqueue_style( 'twentyseventeen-block-style', get_theme_file_uri( '/assets/css/blocks.css' ), array( 'twentyseventeen-style' ), '20190105' );
+	wp_enqueue_style( 'twentyseventeen-block-style', get_theme_file_uri( '/assets/css/blocks.css' ), array( 'twentyseventeen-style' ), '20220524' );
 
 	// Load the dark colorscheme.
 	if ( 'dark' === get_theme_mod( 'colorscheme', 'light' ) || is_customize_preview() ) {
@@ -509,7 +515,7 @@ add_action( 'wp_enqueue_scripts', 'twentyseventeen_scripts' );
  */
 function twentyseventeen_block_editor_styles() {
 	// Block styles.
-	wp_enqueue_style( 'twentyseventeen-block-editor-style', get_theme_file_uri( '/assets/css/editor-blocks.css' ), array(), '20190328' );
+	wp_enqueue_style( 'twentyseventeen-block-editor-style', get_theme_file_uri( '/assets/css/editor-blocks.css' ), array(), '20201208' );
 	// Add custom fonts.
 	wp_enqueue_style( 'twentyseventeen-fonts', twentyseventeen_fonts_url(), array(), null );
 }
@@ -544,7 +550,7 @@ function twentyseventeen_content_image_sizes_attr( $sizes, $size ) {
 add_filter( 'wp_calculate_image_sizes', 'twentyseventeen_content_image_sizes_attr', 10, 2 );
 
 /**
- * Filter the `sizes` value in the header image markup.
+ * Filters the `sizes` value in the header image markup.
  *
  * @since Twenty Seventeen 1.0
  *
@@ -567,10 +573,12 @@ add_filter( 'get_header_image_tag', 'twentyseventeen_header_image_tag', 10, 3 );
  *
  * @since Twenty Seventeen 1.0
  *
- * @param array $attr       Attributes for the image markup.
- * @param int   $attachment Image attachment ID.
- * @param array $size       Registered image size or flat array of height and width dimensions.
- * @return array The filtered attributes for the image markup.
+ * @param string[]     $attr       Array of attribute values for the image markup, keyed by attribute name.
+ *                                 See wp_get_attachment_image().
+ * @param WP_Post      $attachment Image attachment post.
+ * @param string|int[] $size       Requested image size. Can be any registered image size name, or
+ *                                 an array of width and height values in pixels (in that order).
+ * @return string[] The filtered attributes for the image markup.
  */
 function twentyseventeen_post_thumbnail_sizes_attr( $attr, $attachment, $size ) {
 	if ( is_archive() || is_search() || is_home() ) {
@@ -639,6 +647,20 @@ function twentyseventeen_unique_id( $prefix = '' ) {
 	return $prefix . (string) ++$id_counter;
 }
 
+if ( ! function_exists( 'wp_get_list_item_separator' ) ) :
+	/**
+	 * Retrieves the list item separator based on the locale.
+	 *
+	 * Added for backward compatibility to support pre-6.0.0 WordPress versions.
+	 *
+	 * @since 6.0.0
+	 */
+	function wp_get_list_item_separator() {
+		/* translators: Used between list items, there is a space after the comma. */
+		return __( ', ', 'twentyseventeen' );
+	}
+endif;
+
 /**
  * Implement the Custom Header feature.
  */
@@ -663,3 +685,8 @@ require get_parent_theme_file_path( '/inc/customizer.php' );
  * SVG icons functions and filters.
  */
 require get_parent_theme_file_path( '/inc/icon-functions.php' );
+
+/**
+ * Block Patterns.
+ */
+require get_template_directory() . '/inc/block-patterns.php';
