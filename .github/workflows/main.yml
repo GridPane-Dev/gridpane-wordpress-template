@@ -5,6 +5,7 @@ on:
     - cron: "0 * * * *"
   repository_dispatch:
     types: manual
+  workflow_dispatch:
 
 jobs:
   build:
@@ -24,32 +25,36 @@ jobs:
         with:
           repository: 'WordPress/WordPress'
           path: src
-      - name: Get Previous tag
-        working-directory: ./src
-        id: previoustag
-        uses: "WyriHaximus/github-action-get-previous-tag@v1"
-      - name: Switch Tag
-        working-directory: ./src
+          fetch-depth: 0
+      - name: Get latest tag
         shell: bash
         run: |
-          git checkout tags/${{ steps.previoustag.outputs.tag }}
+          echo "LATESTTAG=$(git -C ./src tag | grep [0-9].* | tail -n 1)" >> $GITHUB_ENV
+          git -C ./src tag | grep [0-9].* | tail -n 1
+      - name: Switch Tag
+        shell: bash
+        run: |
+          git -C ./src checkout tags/${{ env.LATESTTAG }}
       - name: copy new files
         shell: bash
         run: |
-          rsync -avzh ./src/ .
+          rsync -avzh --exclude '.git/*' ./src/ .
+      - name: delete src folder
+        shell: bash
+        run: |
+          rm -fr ./src
       - name: Commit changes
         shell: bash
         run: |
-          LONG_HASH="$(git status | grep -o [a-z0-9] | tr -d "\n")"
-          SHORT_HASH="${LONG_HASH:0:7}"
           git config http.sslVerify false
           git config user.name "Automated Push"
           git config user.email "actions@users.noreply.github.com"
           git status
           git add -A
-          git commit -m "WordPress Tag: ${{ steps.previoustag.outputs.tag }}" || exit 0
+          git commit -m "WordPress Tag: ${{ env.LATESTTAG }}" || exit 0
+          git tag ${{ env.LATESTTAG }}
       - name: Push changes
         shell: bash
         run: |
           REMOTE_REPO="https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          git push "${REMOTE_REPO}" HEAD:master
+          git push --tags "${REMOTE_REPO}" HEAD:main
