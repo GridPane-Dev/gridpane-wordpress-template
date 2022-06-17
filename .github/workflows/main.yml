@@ -1,23 +1,55 @@
-name: Push site to GridPane
+name: Hourly Update
 
-on: push
+on: 
+  schedule:
+    - cron: "0 * * * *"
+  repository_dispatch:
+    types: manual
 
 jobs:
-  sftp:
+  build:
 
     runs-on: ubuntu-latest
-    environment: main
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v2
-      - name: Rsync Deployment
-        uses: Burnett01/rsync-deployments@5.2
+      - name: Checkout our repository
+        uses: actions/checkout@v3
+      - name: Remove old wp files
+        shell: bash
+        run: |
+          find . -maxdepth 1 -name wp-\* -exec rm -fr {} \;
+          rm index.php license.txt readme.html xmlrpc.php
+      - name: Checkout their repository
+        uses: actions/checkout@v3
         with:
-          switches: -vrog --delete --chown=${{ secrets.GP_USER }}:${{ secrets.GP_USER }}
-          path: ./
-          remote_path: /home/${{ secrets.GP_USER }}/sites/${{ secrets.GP_SITE_URL }}/htdocs
-          remote_host: ${{ secrets.GP_HOST }}
-          remote_port: ${{ secrets.GP_HOST_PORT }}
-          remote_user: root
-          remote_key: ${{ secrets.GP_DEPLOY_KEY }}
+          repository: 'WordPress/WordPress'
+          path: src
+      - name: Get Previous tag
+        working-directory: ./src
+        id: previoustag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+      - name: Switch Tag
+        working-directory: ./src
+        shell: bash
+        run: |
+          git checkout tags/${{ steps.previoustag.outputs.tag }}
+      - name: copy new files
+        shell: bash
+        run: |
+          rsync -avzh ./src/ .
+      - name: Commit changes
+        shell: bash
+        run: |
+          LONG_HASH="$(git status | grep -o [a-z0-9] | tr -d "\n")"
+          SHORT_HASH="${LONG_HASH:0:7}"
+          git config http.sslVerify false
+          git config user.name "Automated Push"
+          git config user.email "actions@users.noreply.github.com"
+          git status
+          git add -A
+          git commit -m "WordPress Tag: ${{ steps.previoustag.outputs.tag }}" || exit 0
+      - name: Push changes
+        shell: bash
+        run: |
+          REMOTE_REPO="https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push "${REMOTE_REPO}" HEAD:master
