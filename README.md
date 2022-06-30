@@ -284,23 +284,28 @@ If you disable the git integration for your site, then the directory and file st
 
 # Notes
 
-Currently we configure a site for git deployments and check the repo, but the git repo is not deployed on the site until users trigger a deploy.
+Directory structures - intermediary state
+- On enable we currently check the repo and then configure a sites directories for git deployments, but do not carry out an immediate deployment.
+- First deployment occurs on the push of the deploy button or trigger of the push to deploy webhook.
+- This means after enable and before deploy there is an intermediary directory state where the structure is that of a git deployed site, but the files are not from the git repo.
+- We understand this is superfluous and intend to combine this into a single action, however at beta stage it allows us to test and check each stage separately.
 
-We understand this is superfluous and intend to combine this into a single action, however at beta stage it allows us to test and check each stage separately.
-- convert site and run first deploy
+Backups
+- restores should be limited to db only
+- the restore archives will still contain a copy of the files if needed.
 
-At the moment backup restores will overwrite the git files with whatever is from the backup. 
-This is obviously not correct, an upcoming script fix will roll out soon where restoring a backup on a git full immutable site will only restore the database, file restores should be done from git commits and version control.
+Cloning
+- source site is git full deployed
+  - cloning should work as normal
 
+Clone Over
+- source site is git full deployed
+  - clone over should work as normal
+- destination site is git full deployed
+  - clone over should only allow db clones
 
-
-
-
-
-
-
-
-
-
-
-
+Staging
+- source site is git full deployed
+  - staging should work fine, the destination site should be functional but without any traces of git
+- destination site is git full deployed
+  - staging should be limited to only db pushes 
