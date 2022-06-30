@@ -309,3 +309,24 @@ Staging
   - staging should work fine, the destination site should be functional but without any traces of git
 - destination site is git full deployed
   - staging should be limited to only db pushes 
+
+Panel Toggle Features
+- Currently if deploys include correct plugins to match the site panel toggles then the sync make sure toggles are right
+- But using toggles on panel to update site when configured for git full immutable is unpredictable
+  - our mu plugins install because we do it via root and our own files on server - security and mailing
+    - fix incoming - we will refuse to enable/disable unless deployed/removed via git
+    - informative notifications to direct users to deploy with/without plugins to enable/disable automatically
+  - wpfail2ban fails to install but the wp-config is configured and the toggles turn on
+    - fix incoming - we will refuse to enable/disable unless deployed/removed via git with correct notifications/state
+    - Once deployed via git, toggles will become functinoal for features
+    - informative notifications to direct users to redeploy with plugin then toggle
+  - redis object caching won't enable because it can't install the plugin
+    - fix incoming - we will refuse to enable/disable by the panel unless deployed via git
+    - will accept gridpane plugin or till kruss plugin
+    - informative notifications to direct users to redeploy with plugin then toggle
+  - nginx caching enables - but the nginx-helper plugin wont install - so no cache clearance
+    - Caching toggle will stay on as server caching is enabled
+    - informative warning notifications to let user know to redeploy with plugin for clearance function
+  - LS Caching enable - lscache plugin won't install
+    - Fix incoming - caching will not enable unless the plugin has been included via repo
+    - informative notification to let user know to redploy then toggle
