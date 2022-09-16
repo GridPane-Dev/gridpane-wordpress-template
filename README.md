@@ -1,4 +1,4 @@
-# gridpane-wordpress-template
+# gridpane-wordpress-template...
 
 This repo is an example of a repo configured for full deployment (all wp core files, plugins and themes managed by git repo).
 
